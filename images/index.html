@@ -1,0 +1,672 @@
+<!<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>家乡红色足迹数字地图</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+      background: #f7f3ee;
+      color: #333;
+    }
+
+    /* 顶部标题 */
+    .title-box {
+      padding: 18px 24px 16px;
+      background: #f7f3ee;
+    }
+
+    .title-box h1 {
+      margin: 0;
+      color: #8b0000;
+      font-size: 30px;
+      font-weight: 700;
+    }
+
+    .title-box h2 {
+      margin: 6px 0 0;
+      color: #3f3a36;
+      font-size: 20px;
+      font-weight: 500;
+    }
+
+    .title-box p {
+      margin: 7px 0 0;
+      color: #777;
+      font-size: 14px;
+    }
+
+    /* 地图区域 */
+    .map-wrapper {
+      position: relative;
+    }
+
+    #container {
+      width: 100%;
+      height: calc(100vh - 125px);
+      min-height: 600px;
+    }
+
+    /* 红色五星点位 */
+    .red-marker {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #a40000;
+      color: #ffd65a;
+      border: 2px solid white;
+      border-radius: 50%;
+      font-size: 16px;
+      line-height: 1;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      transform-origin: center;
+    }
+
+    .red-marker:hover {
+      transform: scale(1.3);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+    }
+
+    /* 点位信息弹窗 */
+    .info-card {
+      width: min(300px, calc(100vw - 70px));
+      max-height: 72vh;
+      overflow-y: auto;
+      padding: 12px 14px;
+      background: #fffdf9;
+      border-left: 4px solid #a40000;
+      border-radius: 6px;
+    }
+
+    .info-card h3 {
+      margin: 0 0 10px 0;
+      color: #8b0000;
+      font-size: 18px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+    .info-card p {
+      margin: 8px 0 0;
+      color: #666;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .info-intro {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #eadfd8;
+      color: #444;
+      font-size: 14px;
+      line-height: 1.75;
+      text-align: justify;
+    }
+
+    /* 照片轮播 */
+    .photo-carousel {
+      position: relative;
+      width: 100%;
+      height: 170px;
+      overflow: hidden;
+      margin-bottom: 10px;
+      border-radius: 7px;
+      background: #eee;
+    }
+
+    .photo-carousel img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
+    .photo-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      border: none;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.48);
+      color: white;
+      font-size: 22px;
+      line-height: 34px;
+      cursor: pointer;
+      z-index: 10;
+      transition: background 0.2s ease;
+    }
+
+    .photo-btn:hover {
+      background: rgba(139, 0, 0, 0.9);
+    }
+
+    .photo-prev { left: 8px; }
+    .photo-next { right: 8px; }
+
+    .photo-count {
+      position: absolute;
+      right: 8px;
+      bottom: 7px;
+      padding: 3px 8px;
+      background: rgba(0, 0, 0, 0.58);
+      color: white;
+      border-radius: 12px;
+      font-size: 12px;
+      z-index: 10;
+    }
+
+    /* 左侧点位导航栏 */
+    .point-panel {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: 270px;
+      max-height: calc(100% - 40px);
+      overflow-y: auto;
+      z-index: 9998;
+      background: rgba(255, 253, 249, 0.96);
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+      padding: 14px;
+    }
+
+    .panel-title {
+      color: #8b0000;
+      font-size: 20px;
+      font-weight: 700;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #a40000;
+    }
+
+    .province {
+      margin-top: 14px;
+      margin-bottom: 5px;
+      color: #8b0000;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .point-item {
+      padding: 7px 8px;
+      color: #555;
+      font-size: 13px;
+      line-height: 1.5;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .point-item:hover {
+      background: #f3e5e0;
+      color: #8b0000;
+    }
+
+    .point-item.active {
+      background: #8b0000;
+      color: white;
+    }
+
+    /* 地图按钮 */
+    #resetView,
+    #togglePanel {
+      position: absolute;
+      z-index: 9999;
+      border: 2px solid white;
+      border-radius: 8px;
+      background: #8b0000;
+      color: white;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+      transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    #resetView {
+      top: 20px;
+      right: 24px;
+      padding: 14px 28px;
+      font-size: 17px;
+    }
+
+    #togglePanel {
+      display: none;
+    }
+
+    #resetView:hover,
+    #togglePanel:hover {
+      background: #a40000;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 14px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 手机端适配 */
+    @media (max-width: 768px) {
+      .title-box {
+        padding: 11px 14px 10px;
+      }
+
+      .title-box h1 {
+        font-size: 23px;
+        line-height: 1.25;
+      }
+
+      .title-box h2 {
+        margin-top: 4px;
+        font-size: 16px;
+      }
+
+      .title-box p {
+        margin-top: 5px;
+        font-size: 12px;
+      }
+
+      #container {
+        height: calc(100vh - 100px);
+        min-height: 520px;
+      }
+
+      #togglePanel {
+        display: block;
+        top: 12px;
+        left: 12px;
+        padding: 10px 14px;
+        font-size: 14px;
+      }
+
+      #resetView {
+        top: 12px;
+        right: 12px;
+        padding: 10px 14px;
+        font-size: 14px;
+      }
+
+      .point-panel {
+        display: none;
+        top: 58px;
+        left: 12px;
+        right: 12px;
+        width: auto;
+        max-height: 52vh;
+        padding: 12px;
+        border-radius: 10px;
+        background: rgba(255, 253, 249, 0.98);
+      }
+
+      .point-panel.open {
+        display: block;
+      }
+
+      .panel-title {
+        font-size: 18px;
+      }
+
+      .province {
+        font-size: 14px;
+      }
+
+      .point-item {
+        padding: 8px;
+        font-size: 14px;
+      }
+
+      .info-card {
+        width: min(280px, calc(100vw - 60px));
+        max-height: 64vh;
+        padding: 10px 11px;
+      }
+
+      .info-card h3 {
+        font-size: 16px;
+        line-height: 1.4;
+      }
+
+      .info-card p,
+      .info-intro {
+        font-size: 13px;
+      }
+
+      .photo-carousel {
+        height: 155px;
+      }
+
+      .photo-btn {
+        width: 32px;
+        height: 32px;
+        line-height: 32px;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .title-box h1 { font-size: 21px; }
+      .title-box h2 { font-size: 15px; }
+      .info-card { width: min(260px, calc(100vw - 54px)); }
+      .photo-carousel { height: 145px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="title-box">
+    <h1>青春寻迹·红脉乡传</h1>
+    <h2>家乡红色足迹数字地图</h2>
+    <p>跨越6省区 · 寻访12处红色点位</p>
+  </div>
+
+  <div class="map-wrapper">
+    <button id="togglePanel" type="button">点位列表</button>
+
+    <div class="point-panel" id="pointPanel">
+      <div class="panel-title">红色足迹</div>
+
+      <div class="province">浙江省</div>
+      <div class="point-item" data-index="1">中共杭州小组纪念馆</div>
+      <div class="point-item" data-index="2">周恩来祖居</div>
+      <div class="point-item" data-index="3">杜立特行动纪念馆</div>
+      <div class="point-item" data-index="4">侵华日军细菌战衢州陈列馆</div>
+      <div class="point-item" data-index="5">浙西南革命根据地纪念馆</div>
+      <div class="point-item" data-index="6">兰溪革命烈士纪念馆</div>
+      <div class="point-item" data-index="0">武义烈士纪念馆</div>
+
+      <div class="province">甘肃省</div>
+      <div class="point-item" data-index="7">会宁红军长征胜利纪念馆</div>
+
+      <div class="province">安徽省</div>
+      <div class="point-item" data-index="8">蔡洼淮海战役旧址纪念馆</div>
+
+      <div class="province">吉林省</div>
+      <div class="point-item" data-index="9">杨靖宇烈士陵园暨东北抗日联军纪念馆</div>
+
+      <div class="province">四川省</div>
+      <div class="point-item" data-index="10">成都市烈士陵园</div>
+
+      <div class="province">广西壮族自治区</div>
+      <div class="point-item" data-index="11">红七红八军河池整编阅兵纪念馆</div>
+    </div>
+
+    <button id="resetView" type="button">返回全国</button>
+    <div id="container"></div>
+  </div>
+
+  <script>
+    window._AMapSecurityConfig = {
+      securityJsCode: "f1f0e071fdb33edb0f07abc1afa0a9e8"
+    };
+  </script>
+
+  <script src="https://webapi.amap.com/maps?v=2.0&key=7f8486eb938e913ecd048f896e6b3280"></script>
+
+  <script>
+    const points = [
+      {
+        name: "武义烈士纪念馆",
+        location: "浙江省金华市武义县",
+        position: [119.814922, 28.90222],
+        intro: "武义烈士纪念馆依托武义县烈士陵园建设，集中展示武义革命斗争历史和本地英烈事迹。馆内通过史料、实物、场景复原和多媒体等形式，呈现不同时期武义英烈的奋斗与牺牲，是了解当地红色历史、缅怀英烈的重要场所。",
+        folder: "wuyi",
+        imageCount: 3
+      },
+      {
+        name: "中共杭州小组纪念馆",
+        location: "浙江省杭州市上城区",
+        position: [120.176672, 30.253084],
+        intro: "中共杭州小组于1922年9月在杭州成立，是杭州早期党组织的重要起点。纪念馆围绕杭州早期党组织的创建和活动，通过人物塑像、历史资料与场景展示，介绍徐梅坤、于树德、金佛庄、沈干城等成员及杭州早期革命活动。",
+        folder: "hangzhou",
+        imageCount: 3
+      },
+      {
+        name: "周恩来祖居",
+        location: "浙江省绍兴市",
+        position: [120.585697, 30.002038],
+        intro: "周恩来祖居位于绍兴市区，又称“百岁堂”，为具有明清风格的台门式建筑。1939年周恩来赴绍兴期间曾到祖居填写家谱、会见亲友并接待各界人士。如今这里通过故居建筑、家族史料和相关陈列展示其家世与绍兴经历。",
+        folder: "zhouenlai",
+        imageCount: 4
+      },
+      {
+        name: "衢州杜立特行动纪念馆",
+        location: "浙江省衢州市",
+        position: [118.868328, 28.962328],
+        intro: "杜立特行动纪念馆记录1942年“杜立特行动”及其与中国东南地区的历史联系。行动后，多架美军轰炸机在中国境内迫降或坠毁，浙江等地民众参与营救飞行员。馆内通过档案、图片和相关资料呈现行动经过与战火中的民间互助记忆。",
+        folder: "quzhou_doolittle",
+        imageCount: 2
+      },
+      {
+        name: "衢州侵华日军细菌战陈列馆",
+        location: "浙江省衢州市",
+        position: [118.868441, 28.96177],
+        intro: "侵华日军细菌战衢州陈列馆以历史档案、图片、文物等资料，展示抗日战争时期日军在衢州实施细菌战造成的伤害及相关历史。馆内主题陈列沿时间线梳理史实，并通过遇难者纪念设施保存这段战争记忆。",
+        folder: "quzhou_biowar",
+        imageCount: 3
+      },
+      {
+        name: "浙西南革命根据地纪念馆",
+        location: "浙江省丽水市",
+        position: [119.930007, 28.436507],
+        intro: "浙西南革命根据地纪念馆位于丽水市莲都区，以中共浙江省委机关旧址为中心建设。主展馆通过史料、实物、场景复原和多媒体展示，系统呈现浙西南地区从早期党组织活动到土地革命、抗日战争和解放战争时期的革命历史。",
+        folder: "lishui",
+        imageCount: 3
+      },
+      {
+        name: "兰溪革命烈士纪念馆",
+        location: "浙江省金华市兰溪市",
+        position: [119.457241, 29.197944],
+        intro: "兰溪革命烈士纪念馆位于兰荫山，与革命烈士纪念碑、纪念广场和碑道共同组成纪念设施。馆内以兰溪地方革命历史为主线，分阶段展示党的创建和大革命、土地革命战争、抗日战争及解放战争时期的历史资料与烈士事迹。",
+        folder: "lanxi",
+        imageCount: 3
+      },
+      {
+        name: "会宁红军长征胜利纪念馆",
+        location: "甘肃省白银市会宁县",
+        position: [105.053168, 35.690333],
+        intro: "会宁红军长征胜利纪念馆是会宁红军会师旧址的重要组成部分，以红军长征和三大主力会师为主题。展览通过文物、图片和多媒体资料梳理长征历程、重要事件以及会宁会师的历史背景，集中呈现红军长征胜利的历史记忆。",
+        folder: "gansu",
+        imageCount: 3
+      },
+      {
+        name: "萧县蔡洼淮海战役总前委会议暨华东野战军指挥部旧址纪念馆",
+        location: "安徽省宿州市萧县",
+        position: [116.880169, 34.080042],
+        intro: "蔡洼旧址位于安徽省萧县丁里镇蔡洼村，曾是淮海战役期间总前委会议和华东野战军指挥活动的重要地点。旧址保留清末院落建筑，并通过会议旧址、历史实物和陈列资料展示淮海战役相关指挥活动与当地红色历史。",
+        folder: "huaihai",
+        imageCount: 3
+      },
+      {
+        name: "杨靖宇烈士陵园暨东北抗日联军纪念馆",
+        location: "吉林省通化市",
+        position: [125.96211, 41.729463],
+        intro: "杨靖宇烈士陵园暨东北抗日联军纪念馆位于吉林省通化市，是杨靖宇将军安葬地，也是展示东北抗日联军历史的重要纪念场馆。馆内通过图片、文物、文献和场景展示东北抗联的斗争历程，并介绍杨靖宇等抗日将士的事迹。",
+        folder: "jilin",
+        imageCount: 3
+      },
+      {
+        name: "成都市烈士陵园",
+        location: "四川省成都市",
+        position: [104.124788, 30.545367],
+        intro: "成都市烈士陵园位于成都市锦江区，是集烈士纪念碑、悼念广场、烈士墓区和烈士纪念馆等设施于一体的纪念场所。纪念馆通过史料、遗物和图片等内容，展示辛亥革命以来与成都有关的革命历史和烈士事迹。",
+        folder: "chengdu",
+        imageCount: 2
+      },
+      {
+        name: "中国红军第七第八军河池整编阅兵纪念馆",
+        location: "广西壮族自治区河池市",
+        position: [107.84412, 24.688265],
+        intro: "中国红军第七第八军河池整编阅兵纪念馆位于河池市金城江区河池镇，为纪念红七军、红八军相关历史活动而建。展馆围绕百色起义、红军在河池的整编阅兵及当地革命活动等内容，通过展陈再现这段历史。",
+        folder: "hechi",
+        imageCount: 3
+      }
+    ];
+
+    const currentPhotos = new Array(points.length).fill(1);
+
+    function createCarousel(point, index) {
+      if (!point.folder || !point.imageCount) return "";
+
+      return `
+        <div class="photo-carousel">
+          <img
+            id="photo-${index}"
+            src="images/${point.folder}/1.jpg"
+            alt="${point.name}"
+          >
+
+          ${point.imageCount > 1 ? `
+            <button
+              type="button"
+              class="photo-btn photo-prev"
+              aria-label="上一张"
+              onclick="event.stopPropagation(); changePhoto(${index}, -1)">‹</button>
+
+            <button
+              type="button"
+              class="photo-btn photo-next"
+              aria-label="下一张"
+              onclick="event.stopPropagation(); changePhoto(${index}, 1)">›</button>
+          ` : ""}
+
+          <div class="photo-count" id="photo-count-${index}">
+            1 / ${point.imageCount}
+          </div>
+        </div>
+      `;
+    }
+
+    window.changePhoto = function(index, direction) {
+      const point = points[index];
+      let nextPhoto = currentPhotos[index] + direction;
+
+      if (nextPhoto > point.imageCount) nextPhoto = 1;
+      if (nextPhoto < 1) nextPhoto = point.imageCount;
+
+      currentPhotos[index] = nextPhoto;
+
+      const image = document.getElementById(`photo-${index}`);
+      const counter = document.getElementById(`photo-count-${index}`);
+
+      if (image) image.src = `images/${point.folder}/${nextPhoto}.jpg`;
+      if (counter) counter.textContent = `${nextPhoto} / ${point.imageCount}`;
+    };
+
+    function createInfoContent(point, index) {
+      return `
+        <div class="info-card">
+          <h3>${point.name}</h3>
+          ${createCarousel(point, index)}
+          <p>📍 ${point.location}</p>
+          <div class="info-intro">${point.intro}</div>
+        </div>
+      `;
+    }
+
+    const map = new AMap.Map("container", {
+      zoom: 5,
+      center: points[0].position,
+      mapStyle: "amap://styles/whitesmoke"
+    });
+
+    const markers = [];
+    const infoWindows = [];
+
+    points.forEach(function(point, index) {
+      const marker = new AMap.Marker({
+        position: point.position,
+        content: `<div class="red-marker">★</div>`,
+        offset: new AMap.Pixel(-13, -13)
+      });
+
+      map.add(marker);
+      markers.push(marker);
+
+      const infoWindow = new AMap.InfoWindow({
+        content: createInfoContent(point, index),
+        offset: new AMap.Pixel(0, -20),
+        autoMove: false
+      });
+
+      infoWindows.push(infoWindow);
+
+      marker.on("click", function() {
+        showPoint(index);
+      });
+    });
+
+    function showPoint(index) {
+      const point = points[index];
+      currentPhotos[index] = 1;
+
+      map.clearInfoWindow();
+
+      /* 桌面端适度放大，手机端再少放大一级，确保点位始终处于屏幕中心附近 */
+      const targetZoom = window.innerWidth <= 768 ? 10 : 11;
+      map.setZoomAndCenter(targetZoom, point.position, true);
+
+      infoWindows[index].setContent(createInfoContent(point, index));
+      infoWindows[index].open(map, point.position);
+
+      document.querySelectorAll(".point-item").forEach(function(item) {
+        item.classList.remove("active");
+      });
+
+      const currentItem = document.querySelector(`.point-item[data-index="${index}"]`);
+      if (currentItem) currentItem.classList.add("active");
+
+      if (window.innerWidth <= 768) {
+        closeMobilePanel();
+      }
+    }
+
+    document.querySelectorAll(".point-item").forEach(function(item) {
+      item.addEventListener("click", function() {
+        showPoint(Number(item.dataset.index));
+      });
+    });
+
+    const pointPanel = document.getElementById("pointPanel");
+    const togglePanel = document.getElementById("togglePanel");
+
+    function closeMobilePanel() {
+      pointPanel.classList.remove("open");
+      togglePanel.textContent = "点位列表";
+    }
+
+    togglePanel.addEventListener("click", function() {
+      const isOpen = pointPanel.classList.toggle("open");
+      togglePanel.textContent = isOpen ? "收起列表" : "点位列表";
+    });
+
+    document.getElementById("resetView").addEventListener("click", function() {
+      map.clearInfoWindow();
+      map.setFitView(markers);
+
+      document.querySelectorAll(".point-item").forEach(function(item) {
+        item.classList.remove("active");
+      });
+
+      if (window.innerWidth <= 768) {
+        closeMobilePanel();
+      }
+    });
+
+    map.setFitView(markers);
+
+    window.addEventListener("resize", function() {
+      if (window.innerWidth > 768) {
+        pointPanel.classList.remove("open");
+        togglePanel.textContent = "点位列表";
+      }
+    });
+  </script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"7939e04a4baf43c8b86a560f74aac60e","spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
